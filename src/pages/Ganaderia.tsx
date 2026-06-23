@@ -1,4 +1,5 @@
 import { useEffect, useState, FormEvent } from 'react';
+import Sidebar from '../components/Sidebar';
 import { api } from '../lib/api';
 import { Animal, EstadisticasRodeo, ETIQUETAS_CATEGORIA, CategoriaAnimal } from '../lib/types';
 
@@ -45,75 +46,83 @@ export default function Ganaderia() {
         },
       });
       setMostrarForm(false);
-      cargarDatos(); // recarga la lista con el animal nuevo ya guardado en la base real
+      cargarDatos();
     } catch (err: any) {
       alert('No se pudo guardar el animal: ' + err.message);
     }
   }
 
-  if (cargando) return <p style={{ padding: 24 }}>Cargando rodeo...</p>;
-  if (error) return <p style={{ padding: 24, color: '#E24B4A' }}>{error}</p>;
-
   return (
-    <div style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
-      <h2 style={{ marginBottom: 4 }}>Ganadería</h2>
-      <p style={{ color: '#5F5E5A', marginTop: 0 }}>Rodeo bovino — datos en vivo desde la base de datos</p>
+    <div style={{ display: 'flex', fontFamily: 'system-ui, sans-serif' }}>
+      <Sidebar />
+      <div style={{ flex: 1, padding: 24, background: '#F5F4EF', minHeight: '100vh' }}>
+        <h2 style={{ marginBottom: 4 }}>Ganadería</h2>
+        <p style={{ color: '#5F5E5A', marginTop: 0 }}>Rodeo bovino — datos en vivo desde la base de datos</p>
 
-      {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 10, margin: '20px 0' }}>
-          <Tarjeta label="Total rodeo" valor={stats.total} />
-          <Tarjeta label="Vacas de cría" valor={stats.vacasCria} />
-          <Tarjeta label="Terneros/as" valor={stats.terneros} />
-          <Tarjeta label="Invernada" valor={stats.invernada} />
-          <Tarjeta label="Toros" valor={stats.toros} />
-        </div>
-      )}
+        {cargando ? (
+          <p>Cargando rodeo...</p>
+        ) : error ? (
+          <p style={{ color: '#E24B4A' }}>{error}</p>
+        ) : (
+          <>
+            {stats && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 10, margin: '20px 0' }}>
+                <Tarjeta label="Total rodeo" valor={stats.total} />
+                <Tarjeta label="Vacas de cría" valor={stats.vacasCria} />
+                <Tarjeta label="Terneros/as" valor={stats.terneros} />
+                <Tarjeta label="Invernada" valor={stats.invernada} />
+                <Tarjeta label="Toros" valor={stats.toros} />
+              </div>
+            )}
 
-      <button onClick={() => setMostrarForm(!mostrarForm)} style={btnPrimary}>
-        {mostrarForm ? 'Cancelar' : '+ Nuevo animal'}
-      </button>
+            <button onClick={() => setMostrarForm(!mostrarForm)} style={btnPrimary}>
+              {mostrarForm ? 'Cancelar' : '+ Nuevo animal'}
+            </button>
 
-      {mostrarForm && (
-        <form onSubmit={handleCrearAnimal} style={formStyle}>
-          <input name="caravanaInterna" placeholder="Caravana interna (ej: AR-0500)" required style={inputStyle} />
-          <input name="caravanaSenasa" placeholder="Caravana SENASA (opcional)" style={inputStyle} />
-          <select name="categoria" required style={inputStyle}>
-            {Object.entries(ETIQUETAS_CATEGORIA).map(([valor, etiqueta]) => (
-              <option key={valor} value={valor}>{etiqueta}</option>
-            ))}
-          </select>
-          <input name="fechaIngreso" type="date" required style={inputStyle} defaultValue={new Date().toISOString().slice(0, 10)} />
-          <input name="procedencia" placeholder="Procedencia (ej: Nacido en establecimiento)" required style={inputStyle} />
-          <button type="submit" style={btnPrimary}>Guardar animal</button>
-        </form>
-      )}
+            {mostrarForm && (
+              <form onSubmit={handleCrearAnimal} style={formStyle}>
+                <input name="caravanaInterna" placeholder="Caravana interna (ej: AR-0500)" required style={inputStyle} />
+                <input name="caravanaSenasa" placeholder="Caravana SENASA (opcional)" style={inputStyle} />
+                <select name="categoria" required style={inputStyle}>
+                  {Object.entries(ETIQUETAS_CATEGORIA).map(([valor, etiqueta]) => (
+                    <option key={valor} value={valor}>{etiqueta}</option>
+                  ))}
+                </select>
+                <input name="fechaIngreso" type="date" required style={inputStyle} defaultValue={new Date().toISOString().slice(0, 10)} />
+                <input name="procedencia" placeholder="Procedencia (ej: Nacido en establecimiento)" required style={inputStyle} />
+                <button type="submit" style={btnPrimary}>Guardar animal</button>
+              </form>
+            )}
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 20, fontSize: 13 }}>
-        <thead>
-          <tr style={{ background: '#F1EFE8', textAlign: 'left' }}>
-            <th style={th}>Caravana</th>
-            <th style={th}>Categoría</th>
-            <th style={th}>Potrero</th>
-            <th style={th}>Ingreso</th>
-            <th style={th}>Último peso</th>
-          </tr>
-        </thead>
-        <tbody>
-          {animales.length === 0 ? (
-            <tr><td colSpan={5} style={{ padding: 20, textAlign: 'center', color: '#5F5E5A' }}>
-              Todavía no hay animales registrados. Usá "Nuevo animal" para cargar el primero.
-            </td></tr>
-          ) : animales.map((a) => (
-            <tr key={a.id}>
-              <td style={td}><strong>{a.caravanaInterna}</strong></td>
-              <td style={td}>{ETIQUETAS_CATEGORIA[a.categoria]}</td>
-              <td style={td}>{a.potreroActual?.nombre || '—'}</td>
-              <td style={td}>{new Date(a.fechaIngreso).toLocaleDateString('es-AR')}</td>
-              <td style={td}>{a.pesadas[0] ? `${a.pesadas[0].pesoKg} kg` : '—'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 20, fontSize: 13, background: '#fff' }}>
+              <thead>
+                <tr style={{ background: '#F1EFE8', textAlign: 'left' }}>
+                  <th style={th}>Caravana</th>
+                  <th style={th}>Categoría</th>
+                  <th style={th}>Potrero</th>
+                  <th style={th}>Ingreso</th>
+                  <th style={th}>Último peso</th>
+                </tr>
+              </thead>
+              <tbody>
+                {animales.length === 0 ? (
+                  <tr><td colSpan={5} style={{ padding: 20, textAlign: 'center', color: '#5F5E5A' }}>
+                    Todavía no hay animales registrados. Usá "Nuevo animal" para cargar el primero.
+                  </td></tr>
+                ) : animales.map((a) => (
+                  <tr key={a.id}>
+                    <td style={td}><strong>{a.caravanaInterna}</strong></td>
+                    <td style={td}>{ETIQUETAS_CATEGORIA[a.categoria]}</td>
+                    <td style={td}>{a.potreroActual?.nombre || '—'}</td>
+                    <td style={td}>{new Date(a.fechaIngreso).toLocaleDateString('es-AR')}</td>
+                    <td style={td}>{a.pesadas[0] ? `${a.pesadas[0].pesoKg} kg` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+      </div>
     </div>
   );
 }
