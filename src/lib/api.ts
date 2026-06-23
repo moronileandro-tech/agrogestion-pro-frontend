@@ -1,3 +1,4 @@
+
 // Cliente HTTP centralizado: toda comunicación con el backend pasa por acá.
 // La URL del backend se configura como variable de entorno (VITE_API_URL),
 // así el mismo código sirve para desarrollo local y para producción en Railway.
@@ -34,6 +35,16 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
+
+  // Si el token venció o es inválido, el backend responde 401.
+  // En ese caso, limpiamos la sesión y mandamos al login automáticamente
+  // en lugar de mostrar un error confuso en cada módulo.
+  if (res.status === 401) {
+    clearToken();
+    localStorage.removeItem('agrogestion_usuario');
+    window.location.href = '/login';
+    throw new Error('Sesión vencida, redirigiendo al login');
+  }
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: 'Error desconocido' }));
